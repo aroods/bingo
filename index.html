@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SMART Goals Bingo</title>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --ink: #1c2340;
+    --muted: #6b7390;
+    --line: #d9deec;
+    --accent: #3b5bdb;
+    --accent-soft: #e7ecff;
+    --mark: #2f9e6e;
+    --mark-soft: #dff5ea;
+    --win: #f59f00;
+    --win-soft: #fff1cc;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh; padding: 16px 12px 40px;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 14px; }
+  h1 { margin: 0; font-size: clamp(22px, 5vw, 32px); letter-spacing: -0.5px; }
+  h1 span { color: var(--accent); }
+  .sub { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+  .toolbar { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 12px 0; }
+  button {
+    font: inherit; cursor: pointer; border: 1px solid var(--line); background: var(--card);
+    color: var(--ink); padding: 8px 14px; border-radius: 10px; font-size: 14px;
+  }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .board {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+    background: var(--card); padding: 8px; border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(28,35,64,.08);
+  }
+  .cell {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 4px; border-radius: 10px;
+    background: var(--accent-soft); border: 2px solid transparent;
+    font-size: clamp(9.5px, 2.5vw, 14px); line-height: 1.18; font-weight: 600;
+    cursor: pointer; user-select: none; position: relative; hyphens: auto; word-break: break-word;
+    transition: transform .12s, background .15s, border-color .15s;
+  }
+  .cell:active { transform: scale(.95); }
+  .cell.marked { background: var(--mark-soft); border-color: var(--mark); color: #14573b; }
+  .cell.marked::after {
+    content: "\2713"; position: absolute; top: 3px; right: 6px; font-size: clamp(10px, 2.6vw, 15px); color: var(--mark);
+  }
+  .cell.free { background: var(--ink); color: #fff; cursor: default; }
+  .cell.free small { display: block; font-weight: 400; opacity: .8; font-size: .85em; }
+  .cell.win { background: var(--win-soft); border-color: var(--win); color: #7a4b00; animation: pulse 1s ease-in-out 3; }
+  .cell.win::after { color: var(--win); }
+  @keyframes pulse { 50% { transform: scale(1.06); } }
+
+  .status { text-align: center; margin: 12px 0 0; color: var(--muted); font-size: 14px; min-height: 20px; }
+
+  .rules { margin-top: 18px; background: var(--card); border-radius: 14px; padding: 4px 16px; box-shadow: 0 2px 12px rgba(28,35,64,.05); }
+  .rules summary { cursor: pointer; font-weight: 600; padding: 12px 0; }
+  .rules ol { margin: 0 0 12px; padding-left: 20px; color: var(--ink); font-size: 14px; line-height: 1.55; }
+
+  .overlay {
+    position: fixed; inset: 0; background: rgba(28,35,64,.6); display: none;
+    align-items: center; justify-content: center; z-index: 10; padding: 20px;
+  }
+  .overlay.show { display: flex; }
+  .modal {
+    background: var(--card); border-radius: 20px; padding: 28px 24px; text-align: center; max-width: 360px; width: 100%;
+    animation: pop .35s cubic-bezier(.2,1.4,.4,1);
+  }
+  @keyframes pop { from { transform: scale(.6); opacity: 0; } }
+  .modal .big { font-size: clamp(44px, 14vw, 68px); font-weight: 900; color: var(--win); letter-spacing: 2px; margin: 0; }
+  .modal p { color: var(--muted); margin: 8px 0 18px; }
+  canvas#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 11; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span>SMART</span> Goals Bingo</h1>
+    <div class="sub">Listen to the goal statement. Tap the SMART element it demonstrates or lacks.</div>
+  </header>
+
+  <div class="toolbar">
+    <button id="newCard">New card</button>
+    <button id="clearMarks">Clear marks</button>
+    <button id="soundBtn">Sound: on</button>
+  </div>
+
+  <div class="board" id="board" role="grid" aria-label="Bingo card"></div>
+  <div class="status" id="status"></div>
+
+  <details class="rules">
+    <summary>Rules</summary>
+    <ol>
+      <li>Every student receives one Bingo card.</li>
+      <li>Lecturer reads goal statements aloud.</li>
+      <li>Students mark boxes that match the SMART element demonstrated or missing.</li>
+      <li>First to complete a full row, column, or diagonal shouts "SMART!".</li>
+      <li>Lecturer continues to read until 5 people complete bingo.</li>
+      <li>"Winners" discuss briefly why each statement fits or fails SMART criteria.</li>
+    </ol>
+  </details>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <p class="big">SMART!</p>
+    <p>You completed a line. Shout it out and show your card to the lecturer.</p>
+    <button class="primary" id="closeModal">Keep playing</button>
+  </div>
+</div>
+<canvas id="confetti"></canvas>
+
+<script>
+(function () {
+  var ITEMS = [
+    "Relevant to project context", "Unrealistic ambition", "Lacks clear outcome", "Ambiguous wording",
+    "Overly broad scope", "Focuses on deliverables", "Realistic target", "Describes specific task",
+    "Tied to stakeholder needs", "Includes deadline or timeframe", "Links to organizational goal",
+    "Uses percentage or KPI", "No time element", "Has a numeric target", "Vague action statement",
+    "Includes responsible person", "Specifies resource limits", "Uses verbs like 'increase' or 'reduce'",
+    "Time constraint mentioned", "Aligned with project objectives", "Defines success criteria",
+    "Not measurable", "Vague timeframe", "Mentions measurable success"
+  ];
+  var FREE = 12, KEY = "smartBingoV1";
+  var LINES = [];
+  var i, j;
+  for (i = 0; i < 5; i++) {
+    var r = [], c = [];
+    for (j = 0; j < 5; j++) { r.push(i * 5 + j); c.push(j * 5 + i); }
+    LINES.push(r, c);
+  }
+  LINES.push([0, 6, 12, 18, 24], [4, 8, 12, 16, 20]);
+
+  var boardEl = document.getElementById("board");
+  var statusEl = document.getElementById("status");
+  var overlay = document.getElementById("overlay");
+  var soundBtn = document.getElementById("soundBtn");
+  var state = load() || fresh();
+  var soundOn = localStorage.getItem(KEY + "Sound") !== "off";
+  var audioCtx = null;
+
+  function shuffle(a) {
+    a = a.slice();
+    for (var k = a.length - 1; k > 0; k--) {
+      var m = Math.floor(Math.random() * (k + 1)), t = a[k]; a[k] = a[m]; a[m] = t;
+    }
+    return a;
+  }
+  function fresh() {
+    var cells = shuffle(ITEMS);
+    cells.splice(FREE, 0, null);
+    var s = { cells: cells, marked: [FREE], wonLines: [] };
+    save(s);
+    return s;
+  }
+  function save(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} }
+  function load() {
+    try {
+      var s = JSON.parse(localStorage.getItem(KEY));
+      if (s && s.cells && s.cells.length === 25) return s;
+    } catch (e) {}
+    return null;
+  }
+
+  function completedLines() {
+    return LINES.map(function (l, idx) {
+      return l.every(function (p) { return state.marked.indexOf(p) !== -1; }) ? idx : -1;
+    }).filter(function (x) { return x !== -1; });
+  }
+
+  function render() {
+    var done = completedLines();
+    var winCells = {};
+    done.forEach(function (idx) { LINES[idx].forEach(function (p) { winCells[p] = true; }); });
+    boardEl.innerHTML = "";
+    state.cells.forEach(function (text, p) {
+      var d = document.createElement("div");
+      d.className = "cell";
+      d.setAttribute("role", "gridcell");
+      if (p === FREE) {
+        d.className += " free";
+        d.innerHTML = "Free Space<small>SMART Thinker</small>";
+      } else {
+        d.textContent = text;
+        if (state.marked.indexOf(p) !== -1) d.className += " marked";
+        d.addEventListener("click", function () { toggle(p); });
+      }
+      if (winCells[p]) d.className += " win";
+      boardEl.appendChild(d);
+    });
+    var n = state.marked.length - 1;
+    statusEl.textContent = done.length
+      ? "BINGO! " + done.length + (done.length === 1 ? " line" : " lines") + " completed"
+      : n + " of 24 marked";
+  }
+
+  function toggle(p) {
+    var at = state.marked.indexOf(p);
+    if (at === -1) { state.marked.push(p); tick(); } else { state.marked.splice(at, 1); }
+    var done = completedLines();
+    var fresh = done.filter(function (x) { return state.wonLines.indexOf(x) === -1; });
+    state.wonLines = state.wonLines.filter(function (x) { return done.indexOf(x) !== -1; });
+    if (fresh.length) {
+      state.wonLines = state.wonLines.concat(fresh);
+      save(state); render(); celebrate();
+      return;
+    }
+    save(state); render();
+  }
+
+  /* ---------- sound ---------- */
+  function ctx() {
+    if (!audioCtx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) audioCtx = new AC();
+    }
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+  function tone(freq, start, dur, type, vol) {
+    var a = ctx(); if (!a) return;
+    var o = a.createOscillator(), g = a.createGain(), t0 = a.currentTime + start;
+    o.type = type || "sine"; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.2, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(a.destination);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  }
+  function tick() { if (soundOn) tone(660, 0, 0.09, "sine", 0.12); }
+  function fanfare() {
+    if (!soundOn) return;
+    [523.25, 659.25, 783.99, 1046.5].forEach(function (f, k) { tone(f, k * 0.12, 0.25, "triangle", 0.22); });
+    tone(1046.5, 0.5, 0.7, "triangle", 0.25);
+    tone(1318.5, 0.5, 0.7, "sine", 0.15);
+  }
+
+  /* ---------- confetti ---------- */
+  var cv = document.getElementById("confetti"), cx = cv.getContext("2d"), parts = [], raf = null;
+  function resize() { cv.width = innerWidth; cv.height = innerHeight; }
+  addEventListener("resize", resize); resize();
+  function burst() {
+    var colors = ["#3b5bdb", "#f59f00", "#2f9e6e", "#e03131", "#ae3ec9", "#1098ad"];
+    for (var k = 0; k < 140; k++) {
+      parts.push({
+        x: cv.width / 2, y: cv.height * 0.4,
+        vx: (Math.random() - 0.5) * 16, vy: Math.random() * -14 - 3,
+        s: Math.random() * 7 + 4, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4,
+        c: colors[k % colors.length], life: 140
+      });
+    }
+    if (!raf) loop();
+  }
+  function loop() {
+    cx.clearRect(0, 0, cv.width, cv.height);
+    parts = parts.filter(function (p) { return p.life > 0 && p.y < cv.height + 20; });
+    parts.forEach(function (p) {
+      p.vy += 0.35; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.life--;
+      cx.save(); cx.translate(p.x, p.y); cx.rotate(p.r);
+      cx.fillStyle = p.c; cx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * 0.6); cx.restore();
+    });
+    raf = parts.length ? requestAnimationFrame(loop) : null;
+    if (!raf) cx.clearRect(0, 0, cv.width, cv.height);
+  }
+
+  function celebrate() {
+    overlay.classList.add("show");
+    fanfare(); burst();
+    if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
+  }
+
+  /* ---------- controls ---------- */
+  document.getElementById("closeModal").addEventListener("click", function () { overlay.classList.remove("show"); });
+  overlay.addEventListener("click", function (e) { if (e.target === overlay) overlay.classList.remove("show"); });
+  document.getElementById("newCard").addEventListener("click", function () {
+    if (state.marked.length > 1 && !confirm("Draw a new card? Your current marks will be lost.")) return;
+    state = fresh(); render();
+  });
+  document.getElementById("clearMarks").addEventListener("click", function () {
+    state.marked = [FREE]; state.wonLines = []; save(state); render();
+  });
+  function updSound() { soundBtn.textContent = "Sound: " + (soundOn ? "on" : "off"); }
+  soundBtn.addEventListener("click", function () {
+    soundOn = !soundOn;
+    localStorage.setItem(KEY + "Sound", soundOn ? "on" : "off");
+    updSound(); if (soundOn) tick();
+  });
+
+  updSound(); render();
+})();
+</script>
+</body>
+</html>
