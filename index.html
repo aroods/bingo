@@ -38,22 +38,6 @@
   button:hover { border-color: var(--accent); }
   button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-  /* goal selector */
-  .goals {
-    display: flex; gap: 6px; flex-wrap: wrap; align-items: center; justify-content: center;
-    background: var(--card); padding: 10px; border-radius: 14px; margin-bottom: 10px;
-    box-shadow: 0 2px 12px rgba(28,35,64,.05);
-  }
-  .goals .label { font-size: 13px; color: var(--muted); width: 100%; text-align: center; margin-bottom: 2px; }
-  .gbtn {
-    display: flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px;
-    border: 2px solid var(--gc); background: #fff; color: var(--ink); font-weight: 600; font-size: 14px;
-  }
-  .gbtn .n { background: var(--gc); color: #fff; border-radius: 999px; min-width: 20px; height: 20px; padding: 0 5px;
-    display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
-  .gbtn.active { background: var(--gc); color: #fff; }
-  .gbtn.active .n { background: #fff; color: var(--gc); }
-  .gbtn.add { border-style: dashed; border-color: var(--muted); color: var(--muted); }
   .hint { text-align: center; font-size: 13px; color: var(--muted); margin: 0 0 10px; }
   .hint b { color: var(--ink); }
 
@@ -64,7 +48,7 @@
   }
   .cell {
     aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
-    text-align: center; padding: 4px 4px 14px; border-radius: 10px;
+    text-align: center; padding: 4px; border-radius: 10px;
     background: var(--accent-soft); border: 2px solid transparent;
     font-size: clamp(9.5px, 2.5vw, 14px); line-height: 1.18; font-weight: 600;
     cursor: pointer; user-select: none; position: relative; hyphens: auto; word-break: break-word;
@@ -72,26 +56,24 @@
   }
   .cell:active { transform: scale(.95); }
   .cell.marked { background: var(--mark-soft); border-color: var(--mark); color: #14573b; }
-  .cell.free { background: var(--ink); color: #fff; cursor: default; padding-bottom: 4px; }
+  .cell.free { background: var(--ink); color: #fff; cursor: default; }
   .cell.free small { display: block; font-weight: 400; opacity: .8; font-size: .85em; }
   .cell.win { background: var(--win-soft); border-color: var(--win); color: #7a4b00; animation: pulse 1s ease-in-out 3; }
   @keyframes pulse { 50% { transform: scale(1.06); } }
-  .badges { position: absolute; left: 2px; right: 2px; bottom: 2px; display: flex; gap: 2px; justify-content: center; flex-wrap: wrap; }
+
   .badge {
-    background: var(--gc); color: #fff; border-radius: 999px; min-width: 15px; height: 15px; padding: 0 4px;
-    font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;
+    background: var(--gc); color: #fff; border-radius: 999px; min-width: 22px; height: 22px; padding: 0 6px;
+    font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;
   }
-  .cell.dim { opacity: .9; }
+  .cell .badge { position: absolute; top: 3px; right: 3px; box-shadow: 0 0 0 2px #fff; }
 
   .status { text-align: center; margin: 12px 0 0; color: var(--muted); font-size: 14px; min-height: 20px; }
 
   .summary { margin-top: 18px; background: var(--card); border-radius: 14px; padding: 14px 16px; box-shadow: 0 2px 12px rgba(28,35,64,.05); }
   .summary h2 { margin: 0 0 4px; font-size: 17px; }
   .summary .note { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
-  .srow { display: flex; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); align-items: flex-start; }
-  .srow .badge { height: 22px; min-width: 22px; font-size: 12px; margin-top: 1px; flex: none; }
-  .srow .tiles { display: flex; flex-wrap: wrap; gap: 5px; }
-  .chip { background: var(--accent-soft); border-radius: 8px; padding: 3px 8px; font-size: 13px; }
+  .srow { display: flex; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); align-items: center; font-size: 14px; }
+  .srow .badge { flex: none; }
   .empty { color: var(--muted); font-size: 13px; font-style: italic; }
   .summary.flash { animation: flash 1.2s ease 1; }
   @keyframes flash { 30% { box-shadow: 0 0 0 4px var(--win); } }
@@ -120,7 +102,7 @@
 <div class="wrap">
   <header>
     <h1><span>SMART</span> Goals Bingo</h1>
-    <div class="sub">Pick the current goal, then tap the SMART elements it demonstrates or lacks.</div>
+    <div class="sub">For each goal read aloud, tap the one SMART element it demonstrates or lacks.</div>
   </header>
 
   <div class="toolbar">
@@ -129,7 +111,6 @@
     <button id="soundBtn">Sound: on</button>
   </div>
 
-  <div class="goals" id="goals"></div>
   <p class="hint" id="hint"></p>
 
   <div class="board" id="board" role="grid" aria-label="Bingo card"></div>
@@ -137,7 +118,7 @@
 
   <div class="summary" id="summary">
     <h2>Your answers by goal</h2>
-    <p class="note">Use this to explain your bingo: which elements did you pick for each goal?</p>
+    <p class="note">Use this to explain your bingo: which element did you pick for each goal?</p>
     <div id="summaryBody"></div>
   </div>
 
@@ -178,7 +159,7 @@
     "Not measurable", "Vague timeframe", "Mentions measurable success"
   ];
   var COLORS = ["#3b5bdb", "#e8590c", "#9c36b5", "#0c8599", "#c2255c", "#5c940d", "#1971c2", "#d9480f"];
-  var FREE = 12, KEY = "smartBingoV2";
+  var FREE = 12, KEY = "smartBingoV3";
   var LINES = [];
   var i, j;
   for (i = 0; i < 5; i++) {
@@ -190,7 +171,7 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var boardEl = $("board"), statusEl = $("status"), overlay = $("overlay"), soundBtn = $("soundBtn");
-  var goalsEl = $("goals"), hintEl = $("hint"), summaryEl = $("summary"), summaryBody = $("summaryBody");
+  var hintEl = $("hint"), summaryEl = $("summary"), summaryBody = $("summaryBody");
   var state = load() || fresh();
   var soundOn = localStorage.getItem(KEY + "Sound") !== "off";
   var audioCtx = null;
@@ -204,11 +185,11 @@
     }
     return a;
   }
-  /* state: cells[25], goals (count), active (1-based), picks {pos: [goal numbers]}, wonLines */
+  /* state: cells[25], picks {tilePos: goalNumber}, wonLines [lineIdx] */
   function fresh() {
     var cells = shuffle(ITEMS);
     cells.splice(FREE, 0, null);
-    var s = { cells: cells, goals: 1, active: 1, picks: {}, wonLines: [] };
+    var s = { cells: cells, picks: {}, wonLines: [] };
     save(s);
     return s;
   }
@@ -221,60 +202,22 @@
     return null;
   }
 
-  function isMarked(p) { return p === FREE || (state.picks[p] && state.picks[p].length > 0); }
+  function isMarked(p) { return p === FREE || state.picks[p] !== undefined; }
+  function picked() { return Object.keys(state.picks).length; }
 
   function completedLines() {
     var out = [];
     LINES.forEach(function (l, idx) { if (l.every(isMarked)) out.push(idx); });
     return out;
   }
-  function countFor(g) {
-    var n = 0;
-    Object.keys(state.picks).forEach(function (p) { if (state.picks[p].indexOf(g) !== -1) n++; });
-    return n;
-  }
 
-  function renderGoals() {
-    goalsEl.innerHTML = '<div class="label">Which goal is being read?</div>';
-    for (var g = 1; g <= state.goals; g++) {
-      (function (g) {
-        var b = document.createElement("button");
-        b.className = "gbtn" + (g === state.active ? " active" : "");
-        b.style.setProperty("--gc", color(g));
-        b.innerHTML = 'Goal ' + g + ' <span class="n">' + countFor(g) + '</span>';
-        b.addEventListener("click", function () { state.active = g; save(state); render(); });
-        goalsEl.appendChild(b);
-      })(g);
-    }
-    var add = document.createElement("button");
-    add.className = "gbtn add"; add.style.setProperty("--gc", "#6b7390");
-    add.textContent = "+ Next goal";
-    add.addEventListener("click", function () {
-      state.goals++; state.active = state.goals; save(state); render();
-    });
-    goalsEl.appendChild(add);
-    if (state.goals > 1) {
-      var del = document.createElement("button");
-      del.className = "gbtn add"; del.style.setProperty("--gc", "#6b7390");
-      del.textContent = "− Remove last";
-      del.addEventListener("click", removeLastGoal);
-      goalsEl.appendChild(del);
-    }
-    hintEl.innerHTML = 'Tapping a tile adds it to <b style="color:' + color(state.active) + '">Goal ' + state.active +
-      '</b>. Tap it again to remove it. A tile can belong to several goals.';
-  }
-
-  function removeLastGoal() {
-    var g = state.goals;
-    if (countFor(g) && !confirm("Remove Goal " + g + " and its " + countFor(g) + " picks?")) return;
-    Object.keys(state.picks).forEach(function (p) {
-      state.picks[p] = state.picks[p].filter(function (x) { return x !== g; });
-      if (!state.picks[p].length) delete state.picks[p];
-    });
-    state.goals--;
-    if (state.active > state.goals) state.active = state.goals;
-    state.wonLines = state.wonLines.filter(function (idx) { return LINES[idx].every(isMarked); });
-    save(state); render();
+  /* lowest goal number not currently used, so freed numbers get reused */
+  function nextGoal() {
+    var used = {};
+    Object.keys(state.picks).forEach(function (p) { used[state.picks[p]] = true; });
+    var g = 1;
+    while (used[g]) g++;
+    return g;
   }
 
   function renderBoard() {
@@ -292,55 +235,52 @@
         d.textContent = text;
         if (isMarked(p)) {
           d.className += " marked";
-          var bs = document.createElement("div");
-          bs.className = "badges";
-          state.picks[p].slice().sort(function (a, b) { return a - b; }).forEach(function (g) {
-            var s = document.createElement("span");
-            s.className = "badge"; s.style.setProperty("--gc", color(g)); s.textContent = g;
-            bs.appendChild(s);
-          });
-          d.appendChild(bs);
+          var b = document.createElement("span");
+          b.className = "badge"; b.style.setProperty("--gc", color(state.picks[p])); b.textContent = state.picks[p];
+          d.appendChild(b);
         }
         d.addEventListener("click", function () { toggle(p); });
       }
       if (winCells[p]) d.className += " win";
       boardEl.appendChild(d);
     });
-    var n = 0;
-    for (var p = 0; p < 25; p++) if (p !== FREE && isMarked(p)) n++;
     statusEl.textContent = done.length
       ? "BINGO! " + done.length + (done.length === 1 ? " line" : " lines") + " completed"
-      : n + " of 24 tiles used";
+      : picked() + " of 24 tiles picked";
+    var g = nextGoal();
+    hintEl.innerHTML = 'Next pick will be <b style="color:' + color(g) + '">Goal ' + g +
+      '</b>. Tap a numbered tile to clear it and free its number.';
   }
 
   function renderSummary() {
     summaryBody.innerHTML = "";
-    for (var g = 1; g <= state.goals; g++) {
+    var rows = Object.keys(state.picks).map(function (p) { return { p: +p, g: state.picks[p] }; })
+      .sort(function (a, b) { return a.g - b.g; });
+    if (!rows.length) {
+      summaryBody.innerHTML = '<div class="srow"><span class="empty">Nothing picked yet</span></div>';
+      return;
+    }
+    rows.forEach(function (x) {
       var row = document.createElement("div");
       row.className = "srow";
       var b = document.createElement("span");
-      b.className = "badge"; b.style.setProperty("--gc", color(g)); b.textContent = g;
-      var t = document.createElement("div");
-      t.className = "tiles";
-      var any = false;
-      state.cells.forEach(function (text, p) {
-        if (p !== FREE && state.picks[p] && state.picks[p].indexOf(g) !== -1) {
-          var c = document.createElement("span"); c.className = "chip"; c.textContent = text;
-          t.appendChild(c); any = true;
-        }
-      });
-      if (!any) { t.innerHTML = '<span class="empty">No tiles picked for this goal</span>'; }
+      b.className = "badge"; b.style.setProperty("--gc", color(x.g)); b.textContent = x.g;
+      var t = document.createElement("span");
+      t.textContent = "Goal " + x.g + ": " + state.cells[x.p];
       row.appendChild(b); row.appendChild(t);
       summaryBody.appendChild(row);
-    }
+    });
   }
 
-  function render() { renderGoals(); renderBoard(); renderSummary(); }
+  function render() { renderBoard(); renderSummary(); }
 
   function toggle(p) {
-    var arr = state.picks[p] || [], at = arr.indexOf(state.active);
-    if (at === -1) { arr.push(state.active); tick(); } else { arr.splice(at, 1); }
-    if (arr.length) state.picks[p] = arr; else delete state.picks[p];
+    if (state.picks[p] !== undefined) {
+      delete state.picks[p];
+    } else {
+      state.picks[p] = nextGoal();
+      tick();
+    }
     var done = completedLines();
     var added = done.filter(function (x) { return state.wonLines.indexOf(x) === -1; });
     state.wonLines = state.wonLines.filter(function (x) { return done.indexOf(x) !== -1; });
@@ -422,12 +362,12 @@
     summaryEl.classList.remove("flash"); void summaryEl.offsetWidth; summaryEl.classList.add("flash");
   });
   $("newCard").addEventListener("click", function () {
-    if (Object.keys(state.picks).length && !confirm("Draw a new card? Your current marks will be lost.")) return;
+    if (picked() && !confirm("Draw a new card? Your current marks will be lost.")) return;
     state = fresh(); render();
   });
   $("clearMarks").addEventListener("click", function () {
-    if (Object.keys(state.picks).length && !confirm("Clear all marks and goals?")) return;
-    state.picks = {}; state.wonLines = []; state.goals = 1; state.active = 1; save(state); render();
+    if (picked() && !confirm("Clear all marks?")) return;
+    state.picks = {}; state.wonLines = []; save(state); render();
   });
   function updSound() { soundBtn.textContent = "Sound: " + (soundOn ? "on" : "off"); }
   soundBtn.addEventListener("click", function () {
