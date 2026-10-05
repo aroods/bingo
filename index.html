@@ -74,6 +74,8 @@
   .summary .note { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
   .srow { display: flex; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); align-items: center; font-size: 14px; }
   .srow .badge { flex: none; }
+  .srow.win { background: var(--win-soft); border-radius: 8px; padding-left: 8px; padding-right: 8px; font-weight: 600; color: #7a4b00; }
+  .wintag { margin-left: auto; font-size: 12px; color: #b36b00; white-space: nowrap; }
   .empty { color: var(--muted); font-size: 13px; font-style: italic; }
   .summary.flash { animation: flash 1.2s ease 1; }
   @keyframes flash { 30% { box-shadow: 0 0 0 4px var(--win); } }
@@ -260,14 +262,21 @@
       summaryBody.innerHTML = '<div class="srow"><span class="empty">Nothing picked yet</span></div>';
       return;
     }
+    var winCells = {};
+    completedLines().forEach(function (idx) { LINES[idx].forEach(function (p) { winCells[p] = true; }); });
     rows.forEach(function (x) {
       var row = document.createElement("div");
-      row.className = "srow";
+      row.className = "srow" + (winCells[x.p] ? " win" : "");
       var b = document.createElement("span");
       b.className = "badge"; b.style.setProperty("--gc", color(x.g)); b.textContent = x.g;
       var t = document.createElement("span");
       t.textContent = "Goal " + x.g + ": " + state.cells[x.p];
       row.appendChild(b); row.appendChild(t);
+      if (winCells[x.p]) {
+        var w = document.createElement("span");
+        w.className = "wintag"; w.textContent = "★ bingo line";
+        row.appendChild(w);
+      }
       summaryBody.appendChild(row);
     });
   }
